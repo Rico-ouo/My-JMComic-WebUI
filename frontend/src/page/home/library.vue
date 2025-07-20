@@ -1,21 +1,21 @@
 <template>
-  <div class="library">
+  <div class="library" ref="library">
     <div class="controller gap-row" ref="controller">
       <el-button-group>
-        <el-button @click="listPath()" >
+        <el-button @click="listPath()" :size="showMode==='pc'?'':'small'" >
           <el-icon><HomeFilled /></el-icon>
           <span class="a-text">主页</span>
         </el-button>
-        <el-button @click="listPath(nowPath)" >
+        <el-button @click="listPath(nowPath)" :size="showMode==='pc'?'':'small'" >
           <el-icon><Refresh /></el-icon>
           <span class="a-text">刷新</span>
         </el-button>
-        <el-button @click="listPath(faPath)" v-if="faPath" >
+        <el-button @click="listPath(faPath)" v-if="faPath" :size="showMode==='pc'?'':'small'" >
           <el-icon><Top /></el-icon>
         </el-button>
         <el-popover title="收藏夹" placement="bottom" width="90%">
           <template #reference>
-            <el-button>
+            <el-button :size="showMode==='pc'?'':'small'" >
               <el-icon class="favorites"><Management /></el-icon>
             </el-button>
           </template>
@@ -45,7 +45,7 @@
         <span class="a-hidden"><el-icon><Monitor /></el-icon></span>
         <span class="a-text">阅读方向</span>
       </el-text>
-      <el-segmented v-model="setting.direction" :options="direction" size="default" @change="saveSetting" />
+      <el-segmented v-model="setting.direction" :options="direction" @change="saveSetting" :size="showMode==='pc'?'':'small'" class="viewDirection" />
       <el-divider direction="vertical" />
       <el-icon @click="openViewSettingWindow=true;"><View /></el-icon>
       <el-drawer v-model="openViewSettingWindow" title="修改视图" class="viewSettingWindow"><!-- size="50%" -->
@@ -75,9 +75,22 @@
           <el-form-item label="最多显示Tag">
             <el-segmented v-model="setting.maxShowFileTag" :options="showMaxTagOptions" size="default" @change="changeMaxShowFileTag" />
           </el-form-item>
+          <el-space fill>
+            <el-alert type="info" show-icon :closable="false">
+              <p>如果您的手机浏览器出现<el-text tag="ins">底部统计栏</el-text>超出屏幕，可尝试使用该选项修复</p>
+              <p>如果页面无法滚动，则可能浏览器版不支持svh高度，可尝试使用其他模式或更新您的浏览器</p>
+            </el-alert>
+            <el-form-item label="页面高度修正">
+              <el-input-number v-model="setting.phoneHeightFix" :min="0"  @change="changePhoneHeightFix" >
+                <template #suffix>
+                  <span>px</span>
+                </template>
+              </el-input-number>
+              <el-segmented v-model="setting.phoneHeightFixCompatibility" :options="phoneHeightFixCompatibilityOptions" size="default" @change="changePhoneHeightFix" />
+            </el-form-item>
+          </el-space>
         </el-form>
       </el-drawer>
-
     </div>
     <el-divider class="smailDivider" />
     <list-card v-model:in-files="files"
@@ -129,19 +142,40 @@
       />
     </div>
 
+    <div class="grow1"></div>
+
     <!-- el-divider content-position="left" -->
     <div class="statusBottomBar">
       <el-button type="primary" @click="openBeforePath" size="small"
                  v-if="faFile && faFile.length>1 && faFileIndex>0"
       ><el-icon><Back /></el-icon></el-button>
-      <el-tag size="large" effect="light" >
-        <el-icon ><Document /></el-icon>
-        <span class="a-text">文件数量</span>
-        <el-tag size="small" effect="dark">{{ status.num_files }}</el-tag>
-        <el-icon><Folder /></el-icon>
-        <span class="a-text">文件夹数量</span>
-        <el-tag size="small" effect="dark">{{ status.num_dir }}</el-tag>
-      </el-tag>
+
+      <el-popover
+          popper-class="myScrollBar"
+          title="已阅快速跳转"
+          placement="top-start"
+          :disabled="!(fileQuickJump && fileQuickJump.length>0)"
+          width="50vw"
+          :teleported="false"
+      >
+        <template #reference>
+          <el-tag size="large" effect="light" >
+            <el-icon ><Document /></el-icon>
+            <span class="a-text">文件数量</span>
+            <el-tag size="small" effect="dark">{{ status.num_files }}</el-tag>
+            <el-icon><Folder /></el-icon>
+            <span class="a-text">文件夹数量</span>
+            <el-tag size="small" effect="dark">{{ status.num_dir }}</el-tag>
+          </el-tag>
+        </template>
+        <div class="fileItem" v-for="(item,i) in fileQuickJump" :key="i" @click="listPath(item.path, files, i)">
+          <el-link underline="always" line-clamp="3">
+            <el-icon ><CaretRight /></el-icon>
+            {{ item.name }}
+          </el-link>
+        </div>
+      </el-popover>
+
       <el-button type="primary" @click="openNextPath" size="small"
                  v-if="faFile && faFile.length>1 && faFileIndex< faFile.length-1"
       ><el-icon><Right /></el-icon></el-button>
@@ -159,21 +193,30 @@
       </el-tooltip>
 
       <el-popover
-          class="box-item"
+          popper-class="myScrollBar"
           title="上级文件列表"
           placement="top-end"
           width="50vw"
           v-if="faFile && faFile.length>0"
+          :teleported="false"
       >
         <template #reference>
           <el-button><el-icon><Memo /></el-icon></el-button>
         </template>
-        <div class="fileItem" v-for="(item,i) in faFile" :key="i" @click="listPath(item.path, faFile, i)">
-          <el-link underline="always"
-                   :type=" faFileIndex===i?'primary':'' "
-          >
-            <el-icon v-if="faFileIndex===i" ><CaretRight /></el-icon>
-            {{ item.name }}
+        <div class="fileItem" v-for="(item,i) in faFile" :key="i" >
+          <el-link class="fileItemELink" underline="always"  line-clamp="3" :type=" faFileIndex===i?'primary':'' " >
+            <div class="left" @click="listPath(item.path, faFile, i)">
+              <el-icon v-if="faFileIndex===i" ><CaretRight /></el-icon>
+              {{ item.name }}
+            </div>
+            <div class="right">
+              <el-switch
+                  v-model="item.isSeen"
+                  :active-action-icon="View"
+                  :inactive-action-icon="Hide"
+                  @change="updateFileItem(item)"
+              />
+            </div>
           </el-link>
         </div>
       </el-popover>
@@ -186,9 +229,18 @@ import API from "@/config/axios/axiosInstance";
 import ListCard from "@/components/library/ListCard.vue";
 import Vertical from "@/components/image/Vertical.vue";
 import ArraySortUtil from "@/utils/ArraySortUtil.js";
+import {Hide, View} from "@element-plus/icons-vue";
 
 export default {
   name: "library",
+  computed: {
+    Hide() {
+      return Hide
+    },
+    View() {
+      return View
+    }
+  },
   //引入模块
   components: {Vertical, ListCard},
   //父级传入数据
@@ -212,6 +264,8 @@ export default {
         fileGroup: "关闭",
         /*groupDate: "月",*/
         maxShowFileTag: "不限制",
+        phoneHeightFix: 0,
+        phoneHeightFixCompatibility: "vsh",
       },
       direction: ["竖向","从左到右","从右到左"],
       fileSortOptions: [
@@ -242,10 +296,30 @@ export default {
           console.log("maxShowFileTagVal - set2", val, this.maxShowFileTag)
         }
       }),
+      phoneHeightFixCompatibilityOptions: ["svh","vh","js"],
+
+      // 显示模式
+      showMode: "pc",
 
       files:[],
       groupFiles:[],
       filterFileText: "",
+      // 过滤显示快速跳转已读列表
+      fileQuickJump: computed({
+        get: () => {
+          let tmp = [];
+          for (const fileItem of this.files) {
+            if(fileItem.isSeen){
+              tmp.push(fileItem)
+            }
+          }
+          console.log("fileQuickJump", tmp)
+          return tmp;
+        },
+        set: val => {
+
+        }
+      }),
 
       nowPath: "",
       isLoad: false,
@@ -283,6 +357,8 @@ export default {
 
       // 特殊Tag列表
       tagList: {},
+
+      //libraryHeight: 0,
     }
   },
   //方法
@@ -549,8 +625,21 @@ export default {
       // console.log("reSizeWindow", this, this.styleVal.controllerHeight, this.styleAuto)
       this.styleVal.controllerHeight = this.$refs["controller"].clientHeight
       this.styleAuto = {
-        "max-height": "calc(100vh - 168px - " + this.styleVal.controllerHeight + "px + 1.5rem)"
+        //"max-height": "calc(100vh - 168px - " + this.styleVal.controllerHeight + "px + 1.5rem)"
+        // "max-height": `calc(100vh - 168px - ${this.styleVal.controllerHeight}px - ${this.setting.phoneHeightFix}px + 1.5rem)`,
+        //"max-height": `calc(100svh - 168px - ${this.styleVal.controllerHeight}px - ${this.setting.phoneHeightFix}px + 1.5rem)`
       };
+      switch (this.setting.phoneHeightFixCompatibility) {
+        case "vh":
+          this.styleAuto["max-height"] = `calc(100vh - 168px - ${this.styleVal.controllerHeight}px - ${this.setting.phoneHeightFix}px + 1.5rem)`;
+          break;
+        case "js":
+          this.styleAuto["max-height"] = `calc(var(--pHeight) - 168px - ${this.styleVal.controllerHeight}px - ${this.setting.phoneHeightFix}px + 1.5rem)`;
+          break;
+        case "svh":
+        default:
+          this.styleAuto["max-height"] = `calc(100svh - 168px - ${this.styleVal.controllerHeight}px - ${this.setting.phoneHeightFix}px + 1.5rem)`;
+      }
 
       let width = window.innerWidth;
       let w1= 640;
@@ -562,6 +651,7 @@ export default {
           case "从左到右":case "|→":case "→":this.setting.direction="从左到右";break;
           case "从右到左":case "←|":case "←":this.setting.direction="从右到左";break;
         }
+        this.showMode = "pc"
       }else if(width<=w1 && width>w2){
         this.direction = ["↓↓","|→","←|"];
         switch (this.setting.direction) {
@@ -569,6 +659,7 @@ export default {
           case "从左到右":case "|→":case "→":this.setting.direction="|→";break;
           case "从右到左":case "←|":case "←":this.setting.direction="←|";break;
         }
+        this.showMode = "phone"
       }else{
         this.direction = ["↓","→","←"];
         switch (this.setting.direction) {
@@ -576,6 +667,7 @@ export default {
           case "从左到右":case "|→":case "→":this.setting.direction="→";break;
           case "从右到左":case "←|":case "←":this.setting.direction="←";break;
         }
+        this.showMode = "smailPhone"
       }
     },
 
@@ -606,6 +698,10 @@ export default {
         case "3个":this.maxShowFileTagVal=3;break;
         case "6个":this.maxShowFileTagVal=6;break;
       }
+    },
+    changePhoneHeightFix: function () {
+      this.reSizeWindow();
+      this.saveSetting();
     },
 
     listFavorites: function () {
@@ -672,11 +768,18 @@ export default {
   },
   //启动事件
   mounted() {
-    this.listPath()
+    this.listPath();
     let setting = localStorage.getItem("library.setting");
     if(setting!=null && typeof setting === "string"){
       this.setting = JSON.parse(setting);
     }
+
+    //计算空白窗体的高度
+    // this.libraryHeight = this.$refs["library"].clientHeight;
+    // document.documentElement.style.setProperty('--defHeight', `${this.libraryHeight}px`);
+    // let libraryHeight = this.$refs["library"].clientHeight;
+    // document.documentElement.style.setProperty('--defHeight', `${libraryHeight}px`);
+
     window.addEventListener('resize', this.reSizeWindow);
     this.$nextTick(() => {
       this.reSizeWindow();
@@ -701,11 +804,27 @@ export default {
     align-items: center;
   }
   .el-popper.el-tooltip.el-popover{
-    max-height: calc(100vh - 32px - 1rem - var(--el-menu-horizontal-height));
+    max-height: calc(100svh - 32px - 1rem - var(--el-menu-horizontal-height));
     overflow-y: scroll;
   }
   .viewSettingWindow{
     width: 50% !important;
+  }
+
+  .viewDirection{
+    .el-segmented__item-label{
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+  }
+  .statusBottomBar{
+    .fileItem {
+      .el-link, .el-link__inner {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
   }
 }
 .phone .library, .smallPhone .library{

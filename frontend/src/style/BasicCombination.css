@@ -1,3 +1,4 @@
+@charset "UTF-8";
 input[type=color] {
   width: 1.5rem;
   height: 1.5rem;
@@ -38,6 +39,20 @@ button.tiny-button {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
+}
+
+.myScrollBar {
+  /* 滚动条的宽度 */
+  --scroll-width: 1px !important;
+  --scroll-height: var(--scroll-width);
+}
+.myScrollBar::-webkit-scrollbar {
+  width: var(--scroll-width); /* 这里的值就是滚动条的宽度 */
+  height: var(--scroll-height); /* 这里的值就是滚动条的高度 */
+}
+
+.grow1 {
+  flex-grow: 1;
 }
 
 /*# sourceMappingURL=BasicCombination.css.map */

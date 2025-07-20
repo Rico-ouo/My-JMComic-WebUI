@@ -32,6 +32,8 @@
     flex-direction: column;
 
     height: calc(100vh - 60px - 2rem - 1.5rem - 1.5rem - 1.5rem - 100px);
+    height: calc(100svh - 60px - 2rem - 1.5rem - 1.5rem - 1.5rem - 100px);
+    /*height: calc(var(--pHeight) - 60px - 2rem - 1.5rem - 1.5rem - 1.5rem - 100px);*/
     overflow-y: scroll;
 
     .downloadItem{

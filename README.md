@@ -2,7 +2,7 @@
 
 它依赖Sqlite工作，能将指定目录设置为漫画仓库，为其提供简单的标记、预览功能。
 
-搭配Python环境，可以使用 [JMComic-Crawler-Pytho](https://github.com/hect0x7/JMComic-Crawler-Python) 这个库实现一键下载、下载完成后自然标记等功能。
+搭配Python环境，可以使用 [JMComic-Crawler-Python](https://github.com/hect0x7/JMComic-Crawler-Python) 这个库实现一键下载、下载完成后自然标记等功能。
 
 项目[前端](frontend)基于 `Vue` 实现，[后端](backend)采用 `Quarkus` 实现
 

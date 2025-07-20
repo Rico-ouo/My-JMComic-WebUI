@@ -37,12 +37,25 @@
         <div class="footer">
           <div class="line">
             <el-text size="small">{{ formatTime?formatTime(item.time):item.time }}</el-text>
-            <el-switch
-                v-model="item.isSeen"
-                :active-action-icon="View"
-                :inactive-action-icon="Hide"
-                @change="updateItem(item)"
-            />
+            <span class="gap-row">
+              <el-switch
+                  v-model="item.isSeen"
+                  :active-action-icon="View"
+                  :inactive-action-icon="Hide"
+                  @change="updateItem(item)"
+              />
+<!--              <el-popover
+                  class="box-item"
+                  title="设为最新阅读至此"
+                  content="打开目录后自动跳转到此次"
+                  placement="top-end"
+                  :width="200"
+              >
+                <template #reference>
+                  <el-icon><Position /></el-icon>
+                </template>
+              </el-popover>-->
+            </span>
           </div>
           <div class="line">
             <el-rate v-model="item.rate" clearable :colors="rateColor" @change="updateItem(item)" />

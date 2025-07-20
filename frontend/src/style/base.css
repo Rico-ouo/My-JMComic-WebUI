@@ -2,6 +2,7 @@
 * {
   margin: 0;
   padding: 0;
+  --pHeight: 100dvh;
 }
 
 html, body, #app {
