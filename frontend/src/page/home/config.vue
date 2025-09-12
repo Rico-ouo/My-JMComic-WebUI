@@ -20,11 +20,16 @@
 
       <el-button plain @click="openTestWindow_()">测试</el-button>
       <el-drawer v-model="openTestWindow" title="运行测试指令" size="50%" >
+        <el-alert type="warning" :closable="false">
+          <p>此功能仅面对开发者</p>
+          <p>此功能可运行主机上任意命令，小白请不要使用，以免造成数据损失！</p>
+        </el-alert>
+        <el-divider />
         <el-input
             v-model="testCommand"
             :rows="10"
             type="textarea"
-            placeholder="运行命令"
+            :placeholder="'运行命令\r\n一行一个参数\r\n如：jmcomic 1153488 --option=./option.yml\r\n转换后请输入：\r\njmcomic\r\n1153488\r\n--option=./option.yml'"
             :disabled="testIsRun"
         />
         <el-divider />

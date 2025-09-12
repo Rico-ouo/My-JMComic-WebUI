@@ -8,11 +8,13 @@
           ><el-icon><Back /></el-icon></el-button>
 
           <el-popover
+              popper-class="myScrollBar"
               class="faFileName"
               title="上级文件列表"
               placement="bottom"
               width="50vw"
               v-if="faFile && faFile.length>0"
+              :teleported="false"
           >
             <template #reference>
               <el-text truncated>
@@ -52,6 +54,33 @@
       />
     </div>
     <div :class="showSwitchToolbar?'bottom':'bottom hide'">
+      <el-popover
+          popper-class="myScrollBar fileFastMark"
+          title="文件快速标记"
+          placement="top-end"
+          width="70vw"
+          :teleported="false"
+      >
+        <template #reference>
+          <el-tag type="primary"><el-icon><Position /></el-icon></el-tag>
+        </template>
+        <div class="fileItem" v-for="(item,i) in files" :key="i" >
+          <el-link class="fileItemELink" underline="always" line-clamp="3" :type=" now_slider===i?'primary':'' " >
+            <div class="left" @click="changeScroll(i)">
+              <el-icon v-if="now_slider===i" ><CaretRight /></el-icon>
+              {{ item.name }}
+            </div>
+            <div class="right">
+              <el-switch
+                  v-model="item.isSeen"
+                  :active-action-icon="View"
+                  :inactive-action-icon="Hide"
+                  @change="updateFileItem(item)"
+              />
+            </div>
+          </el-link>
+        </div>
+      </el-popover>
       <el-slider v-model="now_slider" :max="files.length" @input="changeScroll" />
       <el-text size="large" @click="switchImage" @touchend="switchImage" >{{ now_slider }}/{{ files.length }}</el-text>
     </div>
@@ -61,9 +90,18 @@
 import {computed} from "vue";
 import TImg from "@/components/T-Img.vue";
 import {ElMessageBox} from "element-plus";
+import {Hide, View} from "@element-plus/icons-vue";
 
 export default {
   name: "Vertical",
+  computed: {
+    Hide() {
+      return Hide
+    },
+    View() {
+      return View
+    }
+  },
   //引入模块
   components: {TImg},
   //父级传入数据
@@ -238,6 +276,13 @@ export default {
             })*/
           })
     },
+
+    updateFileItem: function (data) {
+      if(Array.isArray(data.mark)){
+        data.mark = JSON.stringify(data.mark)
+      }
+      this.$emit('updateData', data);
+    }
   },
   //启动事件
   mounted() {
@@ -279,6 +324,21 @@ export default {
     }
     .el-page-header__content{
       flex-grow: 1;
+    }
+  }
+}
+.library .Vertical .el-popper.el-tooltip.el-popover{
+  max-height: calc(100vh - 128px);
+  max-height: calc(100svh - 128px);
+}
+.fileFastMark{
+  .fileItem{
+    .fileItemELink{
+      width: 100%;
+      .el-link__inner{
+        width: 100%;
+        justify-content: space-between;
+      }
     }
   }
 }

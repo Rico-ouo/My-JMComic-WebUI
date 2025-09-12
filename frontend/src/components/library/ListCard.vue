@@ -3,7 +3,7 @@
 
 <!--    <el-segmented v-model="showMode" :options="['原生','授权']" size="small" />-->
 
-    <el-card class="fileItem" v-for="(item,i) in files" :key="i"
+    <el-card :class="item.isSeen?['fileItem','isSeen']:['fileItem']" v-for="(item,i) in files" :key="i"
       :shadow="item.isSeen?'never':'always'"
     >
       <template #header>
@@ -14,12 +14,13 @@
                 class="subdirectories" :max="999" :offset="calculateOffset(item.subdirectories)"
                 v-if="item.isFile===false"
       >
-<!--        <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item.image)) " fit="cover"
+        <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item.image)) " fit="cover"
                   @dblclick="openPath(item.path, item.isFile, i)" @click="openPath(item.path, item.isFile, i)"
                   v-if="showMode==='原生'"
-        />-->
+        />
         <TImg class="fileImage" :authSrc=" encodeURI('/api/library/img?img=' + encodeURIComponent(item.image)) " fit="cover"
               @dblclick="openPath(item.path, item.isFile, i)" @click="openPath(item.path, item.isFile, i)" :is-lazy="true"
+              v-else
         />
 <!-- v-else -->
       </el-badge>
@@ -80,7 +81,7 @@
                 :max-collapse-tags="maxShowFileTag_"
             >
               <el-option
-                  v-for="item in inTags"
+                  v-for="item in outTags"
                   :key="item"
                   :label="item"
                   :value="item"
@@ -250,6 +251,18 @@ export default {
           // console.log("isCollapseTags - set", val);
         }
       }),
+
+      outTags: computed({
+        get: () => {
+          if(this.inTags && this.inTags.length>0){
+            return this.inTags;
+          }
+          if(this.tagList){
+            return Object.keys(this.tagList);
+          }
+          return [];
+        },
+      })
     }
   },
   //方法

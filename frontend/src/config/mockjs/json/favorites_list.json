@@ -1,0 +1,14 @@
+{
+  "code": 200,
+  "message": null,
+  "time": "1757685050070",
+  "data": [
+    {
+      "id": 2,
+      "path": "/app/Archive/收藏夹01",
+      "showName": "收藏夹01"
+    }
+  ],
+  "response": "success",
+  "success": true
+}

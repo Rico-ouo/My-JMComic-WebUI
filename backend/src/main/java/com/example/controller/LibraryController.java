@@ -4,14 +4,15 @@ import com.example.entity.ApiResponse;
 import com.example.entity.Favorite;
 import com.example.entity.FileItem;
 import com.example.entity.JSONResult.ParentResult;
+import com.example.entity.PathView;
 import com.example.service.BackendBashTask.DelFileFormRM;
 import com.example.service.LibraryService;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -20,7 +21,6 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.h2.util.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,10 +29,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @Path("/api/library")
@@ -51,6 +49,9 @@ public class LibraryController {
 
     @Inject
     LibraryService libraryService;
+
+    @Inject
+    EntityManager entityManager;
 
     @ConfigProperty(name = "setting.dataPath", defaultValue = "./Archive")
     private String defPath;
@@ -132,7 +133,85 @@ public class LibraryController {
 
         List<FileItem> fileItems = libraryService.listFile(path);
 
-        return ApiResponse.returnOK().setDataNow(fileItems);
+        String parent = file.getParent();
+        parent = FileItem.AutomaticProcessingPath(parent);
+        ParentResult data = new ParentResult();
+        data.nowPathFileItems = fileItems;
+        if(parent.startsWith(getPath())){
+            Integer index = null;
+            List<FileItem> parentFileItems = libraryService.listFile(parent);
+            for (int i = 0; i < parentFileItems.size(); i++) {
+                if(path.equals(parentFileItems.get(i).path)){
+                    index = i;
+                    break;
+                }
+            }
+            data.parent = parentFileItems;
+            data.index = index;
+            data.path = parent;
+        }else{
+            //return Response.status(Response.Status.FORBIDDEN).entity("不允许访问").build();
+            //return ApiResponse.returnFail("不允许访问", 403);
+            log.warn("不允许访问: {}", parent);
+        }
+
+        //读取视图
+        PathView viewEntity = null;
+        PanacheQuery<PanacheEntityBase> viewQuery = null;
+        if(path == null || path.isEmpty()){
+            viewQuery = PathView.find("path", getPath());
+        }else{
+            viewQuery = PathView.find("path", path);
+        }
+
+        if(viewQuery!=null){
+            viewEntity = viewQuery.firstResult();
+        }
+        if(viewEntity!=null){
+            data.view = viewEntity.getViewData();
+        }
+
+        //return ApiResponse.returnOK().setDataNow(fileItems);
+        return ApiResponse.returnOK().setDataNow(data);
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    @Path("savePathView")
+    @RolesAllowed({ "User", "Admin" })
+    public ApiResponse savePathView(@Valid Map<String, String> json){
+        String path = json.get("path");
+        String view = json.get("view");
+
+        if(path==null || path.isEmpty()){
+            //return ApiResponse.returnFail("路径为空");
+            path = getPath();
+        }
+
+        // 防止路径溢出
+        if(!path.startsWith(getPath())){
+            //return Response.status(Response.Status.FORBIDDEN).entity("不允许访问").build();
+            return ApiResponse.returnFail("不允许访问", 403);
+        }
+        PathView viewEntity = null;
+        PanacheQuery<PanacheEntityBase> viewQuery = PathView.find("path", path);
+        if(viewQuery!=null){
+            viewEntity = viewQuery.firstResult();
+        }
+        if(viewEntity==null){
+            viewEntity = new PathView();
+        }
+        viewEntity.setPath(path);
+        viewEntity.setViewData(view);
+
+        if(viewEntity.id == null){
+            entityManager.persist(viewEntity); // 新实体，持久化
+        }else{
+            entityManager.merge(viewEntity); // 脱管状态，合并
+        }
+
+        return ApiResponse.returnOK();
     }
 
     @POST
@@ -158,7 +237,6 @@ public class LibraryController {
             //return Response.status(Response.Status.FORBIDDEN).entity("不允许访问").build();
             return ApiResponse.returnFail("不允许访问", 403);
         }
-
         Integer index = null;
         List<FileItem> fileItems = libraryService.listFile(parent);
         for (int i = 0; i < fileItems.size(); i++) {
@@ -167,7 +245,6 @@ public class LibraryController {
                 break;
             }
         }
-
         ParentResult data = new ParentResult();
         data.parent = fileItems;
         data.index = index;
@@ -220,8 +297,8 @@ public class LibraryController {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Transactional
     @Path("img")
-    @RolesAllowed({ "User", "Admin" })
-    //@PermitAll
+    //@RolesAllowed({ "User", "Admin" })
+    @PermitAll
     public Response openImage(@QueryParam("img") String path){// , @QueryParam("token") String token
         path = URLDecoder.decode(path, Charset.forName("UTF-8"));
         if(path==null){

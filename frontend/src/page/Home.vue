@@ -38,7 +38,7 @@ export default {
     upPageSize: function (env) {
       //console.log("upPageSize", env)
       let width = window.innerWidth;
-      let w1= 640;
+      let w1= 720;
       let w2= 450;
       if(width>w1){
         this.clazz = ["box"]

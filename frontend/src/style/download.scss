@@ -48,6 +48,37 @@
         justify-content: space-between;
         /*flex-direction: row-reverse;*/
       }
+
+      .line{
+        .lastLine{
+          overflow: auto;
+          max-height: 50vh;
+          max-height: 50svh;
+        }
+        .nowrap{
+          display: block;
+          line-height: 1rem;
+          /*height: 1rem;*/
+          /*width: 10000px;*/
+          white-space: nowrap;
+        }
+      }
+
+      .completeLogBox{
+        flex-wrap: wrap;
+        .runCommand{
+          background: var(--el-border-color-lighter);
+          border: 1px solid;
+          padding: 0 0.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.2rem;
+        }
+      }
+
+      .logText{
+        overflow-wrap: anywhere;
+      }
     }
   }
 }

@@ -159,6 +159,13 @@ public class FileItem extends PanacheEntity {
     public static FileItem getFormPath(String path){
         return getFormPath(new File(path));
     }
+
+    /**
+     * 自动转换路径
+     * <p> 将相对路径转换成绝对路径 </p>
+     * @param path
+     * @return
+     */
     public static String AutomaticProcessingPath(String path){
         Path path_ = Paths.get(path);
         path_ = path_.normalize();

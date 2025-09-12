@@ -1,6 +1,7 @@
 <template>
   <div class="T-Img">
     <el-image v-if="imgBlob" class="eImg" :src="imgBlob" fit="cover" :lazy="isLazy"/>
+<!--    <el-image v-if="imgBlob" class="eImg" :src="getImgBlob" fit="cover" :lazy="isLazy"/>-->
     <div v-else class="error">
       {{ errorMessage }}
     </div>
@@ -22,16 +23,45 @@ export default {
   data() {
     return {
       //双向绑定处理
+      /*
       src: computed({
-        get: () => this.authSrc,
+        get: () => {
+          this.getImage(this.authSrc);
+          return this.authSrc;
+        },
         set: val => {
           this.$emit("update:authSrc", val);
         }
       }),
+      */
 
       imgBlob: null,
       errorMessage: null,
+      urlBuff: null,
 
+      getImgBlob: computed({
+        get: async () =>  {
+          let that = this;
+          if(this.authSrc !== this.urlBuff){
+            that.imgBlob = undefined;
+            that.urlBuff = that.authSrc;
+            this.ajaxBlob("GET", this.authSrc, function (res) {
+              //console.log("ajaxBlob res:", url, res)
+              if(res.status === 200){
+                that.imgBlob = URL.createObjectURL(res.response);
+              }else{
+                that.errorMessage = "加载失败"
+                console.log("errorMessage", that.errorMessage)
+              }
+            }, true);
+          }
+          console.log("ajaxBlob", this.ajaxBlob);
+          return this.imgBlob;
+        },
+        set: val => {
+          // this.$emit("update:authSrc", val);
+        }
+      }),
     }
   },
   //方法
@@ -49,9 +79,9 @@ export default {
       })
       /*that.imgBlob = url;*/
     },
-    ajaxBlob: function (method, url, func) {
+    ajaxBlob: function (method, url, func, async=true) {
       let xhr = new XMLHttpRequest();
-      xhr.open(method, url, true);
+      xhr.open(method, url, async);
       xhr.responseType = 'blob'; // 设置 responseType 为 blob
       let token = this.getToken();
       if(token){

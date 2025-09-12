@@ -11,11 +11,12 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "axios": "^1.9.0",
-    "element-plus": "^2.10.1",
+    "element-plus": "^2.11.1",
     "jwt-decode": "^4.0.0",
     "mockjs": "^1.1.0",
     "postcss-viewport-height-correction": "^1.1.1",
     "vue": "^3.5.13",
+    "vue-clipboard3": "^2.0.0",
     "vue-router": "^4.5.1",
     "vuex": "^4.1.0"
   },

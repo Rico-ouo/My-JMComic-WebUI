@@ -44,6 +44,10 @@ const routes = [
   //   name: 'indexPage',
   //   component: () => import('@/page/Home.vue')
   // },
+  // {
+  //   path: '/t',
+  //   component: () => import('@/page/phoneTest.vue'),
+  // },
 ]
 
 const router = createRouter({

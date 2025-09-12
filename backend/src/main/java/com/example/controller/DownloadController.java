@@ -74,4 +74,19 @@ public class DownloadController {
         }
         return ApiResponse.returnOK().setDataNow(backTaskService.delTask(id));
     }
+
+    @POST
+    @RolesAllowed({ "User", "Admin" })
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("stop")
+    public ApiResponse stopDownloadAlbumTask(@Valid Map<String, Long> json){
+        if(json==null){
+            return ApiResponse.returnFail("参数异常");
+        }
+        Long id = json.get("id");
+        if(id==null){
+            return ApiResponse.returnFail("参数异常");
+        }
+        return ApiResponse.returnOK().setDataNow(backTaskService.stopTask(id));
+    }
 }

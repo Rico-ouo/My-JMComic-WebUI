@@ -30,6 +30,7 @@ import java.util.*;
 
 @Slf4j
 @Path("/secure/")
+@PermitAll
 public class SecureController {
 
     @Inject
@@ -56,7 +57,7 @@ public class SecureController {
     @Consumes(MediaType.APPLICATION_JSON)//接受JSON数据
     @Produces(MediaType.APPLICATION_JSON)//返回JSON数据
     @Path("login")
-//    @PermitAll
+    @PermitAll
     public ApiResponse login(@Valid Map<String, String> data){
 //        JSONObject obj = JSON.parseObject(data);
 ////        FileItem item = JSON.parseObject(data, FileItem.class);
@@ -120,7 +121,7 @@ public class SecureController {
     @Transactional
     @Produces(MediaType.APPLICATION_JSON)
     @Path("check")
-//    @PermitAll
+    @PermitAll
     public ApiResponse check(@Valid Map<String, String> data, @HeaderParam("Authorization") String authHeader){
         String token = data.get("token");
         if(token==null || token.isEmpty()){

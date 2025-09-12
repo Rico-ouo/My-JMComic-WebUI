@@ -10,4 +10,6 @@ public class ParentResult{
     public List<FileItem> parent;
     public Integer index;
     public String path;
+    public List<FileItem> nowPathFileItems;
+    public String view;
 }

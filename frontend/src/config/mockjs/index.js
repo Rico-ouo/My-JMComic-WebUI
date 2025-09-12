@@ -9,7 +9,9 @@ import library_list_file from "./json/library_list_file.json"
 import loginSuccess from "./json/login_success.json"
 import getTask from "./json/getTask.json"
 import downloadTaskList from "./json/download_task_list.json"
+import downloadList from "./json/download_list.json"
 import tagList from "./json/tag_list.json"
+import favorites_list from "./json/favorites_list.json"
 
 if(process.env.NODE_ENV === "development") {
 
@@ -40,7 +42,8 @@ if(process.env.NODE_ENV === "development") {
     Mock.mock("/api/download/g", getTask);
     Mock.mock("/secure/login", loginSuccess);
     Mock.mock("/secure/check", apiSuccess);
-    Mock.mock("/api/download", downloadTaskList);
+    //Mock.mock("/api/download", downloadTaskList);
+    Mock.mock("/api/download", downloadList);
     Mock.mock("/api/tag/", tagList);
-
+    Mock.mock("/api/library/favorites/list", favorites_list);
 }

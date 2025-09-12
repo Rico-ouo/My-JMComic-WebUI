@@ -1,22 +1,19 @@
 package com.example.service.BackendBashTask;
 
 import com.example.entity.FileItem;
+import com.example.entity.FixedSizeQueue;
 import com.example.service.BackDATABASETask;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,8 +24,8 @@ public class DownloadJMComic extends BaseBackendBashTask {
     private long a_id;
     private String name;
     private String[] tags;
-    private long time;
-    private long endTime;
+//    private long time;
+//    private long endTime;
     private String savePath;
 
     @Setter
@@ -44,20 +41,27 @@ public class DownloadJMComic extends BaseBackendBashTask {
 //    @Inject
 //    EntityManager entityManager;
 
+    private FixedSizeQueue<String> logLastNLine;
+    public List<String> getLogLastNLine() {
+        if(logLastNLine ==null){return null;}
+        return logLastNLine.getAll();
+    }
+
     public DownloadJMComic(){
         super();
 //        setCharseName("UTF-8");
         //sun.nio.cs.GBK
-
+        logLastNLine = new FixedSizeQueue<>(30);
     }
 
     public DownloadJMComic(String aID) {
         //super("jmcomic "+ aID + "--option=\""+ System.getProperty("user.dir") + File.separator + "jm.yml\"");
         super("jmcomic "+ aID + " --option=./option.yml");
         setLogMode(BaseBackendBashTask.LOGMODE_LAST_LINE);
-        time = System.currentTimeMillis();
+        //time = System.currentTimeMillis();
         //name="本子ID："+ aID +" 等待获取标题...";
         a_id = Long.valueOf(aID);
+        logLastNLine = new FixedSizeQueue<>(30);
     }
 
 
@@ -67,6 +71,7 @@ public class DownloadJMComic extends BaseBackendBashTask {
     @ActivateRequestContext
     public void logHook(String logLine) {
 //        super.logHook(logLine);
+        logLastNLine.add(logLine);
         if(name==null){
             Matcher m = c.matcher(logLine);
             if(m.find()){
@@ -245,7 +250,7 @@ public class DownloadJMComic extends BaseBackendBashTask {
     @Override
     public void exitHook(int exitCode, String errMessage) {
         super.exitHook(exitCode, errMessage);
-        endTime = System.currentTimeMillis();
+        //endTime = System.currentTimeMillis();
         log.info("【{}】下载本子结束。{}: {}", a_id, exitCode, errMessage);
         //log.info(new String("编码运行结束[JMComic]: {}".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8), getCharseName());
         log.info("编码运行结束[JMComic]: {}", getCharseName());

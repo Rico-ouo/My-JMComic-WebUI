@@ -4,13 +4,13 @@
   flex-wrap: wrap;
   grid-gap: 1rem;
   gap: 1rem;
-  overflow-y: scroll;
+  /*overflow-y: scroll;*/
   /*padding-bottom: 2rem;
   height: 0;
   flex-grow: 1;*/
   /*max-height: 100vh;*/
-  max-height: calc(100vh - 200px + 1.5rem);
-  max-height: calc(100svh - 200px + 1.5rem);
+  /*max-height: calc(100vh - 200px + 1.5rem);*/
+  /*max-height: calc(100svh - 200px + 1.5rem);*/
   /*max-height: calc(var(--pHeight) - 200px + 1.5rem);*/
   /*padding: 1rem 0;*/
   /*&>.el-card:last-child{
@@ -45,6 +45,14 @@
 .ListCard .fileItem .footer .delButton {
   color: red;
   margin: 0.5rem;
+}
+.ListCard .fileItem.isSeen {
+  opacity: 0.5;
+  /*transform: perspective(100px) rotateX(0deg) rotateY(-8deg) rotateZ(0deg) translateZ(-18px);*/
+}
+.ListCard .fileItem.isSeen:hover {
+  opacity: 1;
+  /*transform: perspective(100px) rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(0px);*/
 }
 .ListCard .a-hidden {
   display: none;

@@ -12,7 +12,8 @@
       </el-form>
 
       <template #footer>
-        <el-button type="primary" @click="loginFunc">登录</el-button>
+<!--        <el-button class="myButton" type="primary" @click="loginFunc">登录</el-button>-->
+        <div class="diyButton" @click="loginFunc">登录</div>
       </template>
     </el-card>
   </div>

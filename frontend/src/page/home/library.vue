@@ -47,101 +47,108 @@
       </el-text>
       <el-segmented v-model="setting.direction" :options="direction" @change="saveSetting" :size="showMode==='pc'?'':'small'" class="viewDirection" />
       <el-divider direction="vertical" />
-      <el-icon @click="openViewSettingWindow=true;"><View /></el-icon>
+      <div class="gap-row" v-if="isPathView">
+        <el-icon @click="openViewSettingWindow=true;" style="color: var(--el-color-success);"><View /></el-icon>
+        <el-text size="small" type="success" class="a-text">路径专属视图</el-text>
+      </div>
+      <el-icon @click="openViewSettingWindow=true;" v-if="!isPathView"><View /></el-icon>
       <el-drawer v-model="openViewSettingWindow" title="修改视图" class="viewSettingWindow"><!-- size="50%" -->
-        <el-form :model="form" label-width="auto" class="viewSetting">
-          <el-form-item label="文件排序">
-            <div>
-              <el-select
-                  v-model="setting.fileSortItem"
-                  placeholder="Select"
-                  size="small"
-                  style="width: 6rem;"
-                  @change="analyzePath()"
-              >
-                <el-option
-                    v-for="item in fileSortOptions"
-                    :key="item.key"
-                    :label="item.label"
-                    :value="item.value"
-                />
-              </el-select>
-              <el-switch v-model="setting.fileSort" active-text="↑" inactive-text="↓" @change="analyzePath()" />
-            </div>
-          </el-form-item>
-          <el-form-item label="文件分组">
-            <el-segmented v-model="setting.fileGroup" :options="groupOptions" size="default" @change="analyzePath()" />
-          </el-form-item>
-          <el-form-item label="最多显示Tag">
-            <el-segmented v-model="setting.maxShowFileTag" :options="showMaxTagOptions" size="default" @change="changeMaxShowFileTag" />
-          </el-form-item>
-          <el-space fill>
-            <el-alert type="info" show-icon :closable="false">
-              <p>如果您的手机浏览器出现<el-text tag="ins">底部统计栏</el-text>超出屏幕，可尝试使用该选项修复</p>
-              <p>如果页面无法滚动，则可能浏览器版不支持svh高度，可尝试使用其他模式或更新您的浏览器</p>
-            </el-alert>
-            <el-form-item label="页面高度修正">
-              <el-input-number v-model="setting.phoneHeightFix" :min="0"  @change="changePhoneHeightFix" >
-                <template #suffix>
-                  <span>px</span>
-                </template>
-              </el-input-number>
-              <el-segmented v-model="setting.phoneHeightFixCompatibility" :options="phoneHeightFixCompatibilityOptions" size="default" @change="changePhoneHeightFix" />
+        <div class="box myScrollBar">
+          <el-form label-width="auto" class="viewSetting">
+            <el-form-item label="文件排序">
+              <div>
+                <el-select
+                    v-model="setting.fileSortItem"
+                    placeholder="Select"
+                    size="small"
+                    style="width: 6rem;"
+                    @change="analyzePath(true)"
+                >
+                  <el-option
+                      v-for="item in fileSortOptions"
+                      :key="item.key"
+                      :label="item.label"
+                      :value="item.value"
+                  />
+                </el-select>
+                <el-switch v-model="setting.fileSort" active-text="↑" inactive-text="↓" @change="analyzePath(true)" />
+              </div>
             </el-form-item>
-          </el-space>
-        </el-form>
+            <el-form-item label="文件分组">
+              <el-segmented v-model="setting.fileGroup" :options="groupOptions" size="default" @change="analyzePath(true)" />
+            </el-form-item>
+            <el-form-item label="最多显示Tag">
+              <el-segmented v-model="setting.maxShowFileTag" :options="showMaxTagOptions" size="default" @change="changeMaxShowFileTag" />
+            </el-form-item>
+            <el-space fill>
+              <el-alert type="info" show-icon :closable="false">
+                <p>如果您的手机浏览器出现<el-text tag="ins">底部统计栏</el-text>超出屏幕，可尝试使用该选项修复</p>
+                <p>如果页面无法滚动，则可能浏览器版不支持svh高度，可尝试使用其他模式或更新您的浏览器</p>
+              </el-alert>
+              <el-form-item label="页面高度修正">
+                <el-input-number v-model="setting.phoneHeightFix" :min="0"  @change="changePhoneHeightFix" >
+                  <template #suffix>
+                    <span>px</span>
+                  </template>
+                </el-input-number>
+                <el-divider direction="vertical" />
+                <el-segmented v-model="setting.phoneHeightFixCompatibility" :options="phoneHeightFixCompatibilityOptions" size="default" @change="changePhoneHeightFix" />
+              </el-form-item>
+            </el-space>
+          </el-form>
+          <div class="line">
+            <el-tooltip
+                class="box-item"
+                effect="dark"
+                content="其实修改后会自动保存的"
+                placement="top"
+            >
+              <el-button type="primary" plain @click="saveSetting">保存到浏览器默认视图</el-button>
+            </el-tooltip>
+            <el-button type="success" @click="saveViewToPath">保存路径视图</el-button>
+          </div>
+        </div>
       </el-drawer>
     </div>
     <el-divider class="smailDivider" />
-    <list-card v-model:in-files="files"
-               v-loading.fullscreen.lock="isLoad"
-               @updateData="updateFileItem" @openPath="listPath"
-               @openView="openImage" @delFile="delFilePath"
-               :inTags="tagOptions.out" :style="styleAuto"
-               :maxShowFileTag="maxShowFileTagVal"
-               v-if="setting.fileGroup==='关闭'"
-               :favoritesList="favorites" @refreshFavoritesList="listPath(nowPath)" @delFavorites="delFavorites"
-               :tagList="tagList"
-    />
-<!--    <div class="groupView" :style="styleAuto">
-      <el-collapse v-model="groupViewShowTag" accordion v-if="setting.fileGroup!=='关闭'">
-        <el-collapse-item :title="item.name" :name="item.name" v-for="(item,i) in groupFiles" :key="i">
+    <div class="fileView" :style="styleAuto" >
+      <el-segmented v-model="fastFileFilter" :options="fastFileFilterOptions" @change="analyzePath()" :size="showMode==='pc'?'':'small'" class="fastFileFilter" />
+      <list-card v-model:in-files="filesFilterResult"
+                 v-loading.fullscreen.lock="isLoad"
+                 @updateData="updateFileItem" @openPath="listPath"
+                 @openView="openImage" @delFile="delFilePath"
+                 :inTags="tagOptions.out"
+                 :maxShowFileTag="maxShowFileTagVal"
+                 v-if="setting.fileGroup==='关闭'"
+                 :favoritesList="favorites" @refreshFavoritesList="listPath(nowPath)" @delFavorites="delFavorites"
+                 :tagList="tagList"
+      />
+      <div class="groupView" :style="styleAuto">
+        <div class="groupFileView" v-for="(item,i) in groupFiles" :key="i" v-if="setting.fileGroup!=='关闭'">
+          <div class="title">
+            <el-divider content-position="left">{{ item.name }}</el-divider>
+          </div>
           <list-card v-model:in-files="item.files"
                      v-loading.fullscreen.lock="isLoad"
                      @updateData="updateFileItem" @openPath="listPath"
                      @openView="openImage" @delFile="delFilePath"
                      :inTags="tagOptions.out"
+                     :maxShowFileTag="maxShowFileTagVal"
+                     :favoritesList="favorites" @refreshFavoritesList="listPath(nowPath)" @delFavorites="delFavorites"
+                     :tagList="tagList"
           />
-        </el-collapse-item>
-      </el-collapse>
-    </div>-->
-    <div class="groupView" :style="styleAuto">
-      <div class="groupFileView" v-for="(item,i) in groupFiles" :key="i" v-if="setting.fileGroup!=='关闭'">
-        <div class="title">
-          <el-divider content-position="left">{{ item.name }}</el-divider>
         </div>
-        <list-card v-model:in-files="item.files"
-                   v-loading.fullscreen.lock="isLoad"
-                   @updateData="updateFileItem" @openPath="listPath"
-                   @openView="openImage" @delFile="delFilePath"
-                   :inTags="tagOptions.out"
-                   :maxShowFileTag="maxShowFileTagVal"
-                   :favoritesList="favorites" @refreshFavoritesList="listPath(nowPath)" @delFavorites="delFavorites"
-                   :tagList="tagList"
-        />
       </div>
     </div>
-<!--  :faFile="faFile" :faFileIndex="faFileIndex"  -->
-    <el-empty v-if="files==null || files.length===0" description="目录为空" />
     <div class="imageView" v-if="viewImage">
       <vertical v-model:inData="filterFiles" v-model:inSwitchView="viewImage"
                 :setDirection="setting.direction" :fileIndex="fileIndex"
                 :faFile="faFile" :faFileIndex="faFileIndex"
                 @openBeforePath="openBeforePath" @openNextPath="openNextPath"
-                @switchPath="listPath"
+                @switchPath="listPath" @updateData="updateFileItem"
       />
     </div>
-
+    <el-empty v-if="filesFilterResult==null || filesFilterResult.length===0" :description="loadEmptyText" />
     <div class="grow1"></div>
 
     <!-- el-divider content-position="left" -->
@@ -151,12 +158,13 @@
       ><el-icon><Back /></el-icon></el-button>
 
       <el-popover
-          popper-class="myScrollBar"
+          popper-class="myScrollBar seenList"
           title="已阅快速跳转"
           placement="top-start"
           :disabled="!(fileQuickJump && fileQuickJump.length>0)"
           width="50vw"
           :teleported="false"
+          ref="seenList"
       >
         <template #reference>
           <el-tag size="large" effect="light" >
@@ -168,9 +176,15 @@
             <el-tag size="small" effect="dark">{{ status.num_dir }}</el-tag>
           </el-tag>
         </template>
-        <div class="fileItem" v-for="(item,i) in fileQuickJump" :key="i" @click="listPath(item.path, files, i)">
-          <el-link underline="always" line-clamp="3">
-            <el-icon ><CaretRight /></el-icon>
+        <div class="fileItem" v-for="(item,i) in fileQuickJump" :key="i">
+          <el-link underline="always" line-clamp="3" v-if="item.isFile" @click="openImage(item.openIndex, 'seenList')">
+            <el-icon color="#409EFF"><View /></el-icon>
+            <el-icon><Document /></el-icon>
+            {{ item.name }}
+          </el-link>
+          <el-link underline="always" line-clamp="3" v-else @click="listPath(item.path, files, i)">
+            <el-icon color="#409EFF"><View /></el-icon>
+            <el-icon><Folder /></el-icon>
             {{ item.name }}
           </el-link>
         </div>
@@ -193,7 +207,7 @@
       </el-tooltip>
 
       <el-popover
-          popper-class="myScrollBar"
+          popper-class="myScrollBar ParentFileList"
           title="上级文件列表"
           placement="top-end"
           width="50vw"
@@ -221,15 +235,19 @@
         </div>
       </el-popover>
     </div>
+
+    <el-icon><CaretBottom /></el-icon>
+    <el-icon><CaretRight /></el-icon>
+    <el-icon><CaretLeft /></el-icon>
   </div>
 </template>
 <script>
-import {computed} from "vue";
+import {computed, reactive, unref} from "vue";
 import API from "@/config/axios/axiosInstance";
 import ListCard from "@/components/library/ListCard.vue";
 import Vertical from "@/components/image/Vertical.vue";
 import ArraySortUtil from "@/utils/ArraySortUtil.js";
-import {Hide, View} from "@element-plus/icons-vue";
+import {Hide, View, CaretBottom, CaretRight, CaretLeft} from "@element-plus/icons-vue";
 
 export default {
   name: "library",
@@ -242,7 +260,7 @@ export default {
     }
   },
   //引入模块
-  components: {Vertical, ListCard},
+  components: {CaretLeft, CaretRight, CaretBottom, Vertical, ListCard},
   //父级传入数据
   props: {
     // inData: Object,
@@ -268,6 +286,11 @@ export default {
         phoneHeightFixCompatibility: "vsh",
       },
       direction: ["竖向","从左到右","从右到左"],
+      // direction: [
+      //   {value: "竖向", icon: CaretBottom},
+      //   {value: "从左到右", icon: CaretRight},
+      //   {value: "从右到左", icon: CaretLeft},
+      // ],
       fileSortOptions: [
         {key:"fileName", label:"文件名", value:"fileName"}
         ,{key:"changeTime", label:"修改日期", value:"changeTime"}
@@ -278,7 +301,7 @@ export default {
       showMaxTagOptions: ["不限制","3个","6个"],
       maxShowFileTagVal: computed({
         get: () => {
-          console.log("maxShowFileTagVal - get", this.setting.maxShowFileTag)
+          // console.log("maxShowFileTagVal - get", this.setting.maxShowFileTag)
           switch (this.setting.maxShowFileTag) {
             case "不限制":return 0;
             case "3个":return 3;
@@ -287,29 +310,39 @@ export default {
           return 0;
         },
         set: val => {
-          console.log("maxShowFileTagVal - set1", val, this.maxShowFileTag)
+          // console.log("maxShowFileTagVal - set1", val, this.maxShowFileTag)
           switch (val) {
             case 0:this.maxShowFileTag = "不限制";break;
             case 3:this.maxShowFileTag = "3个";break;
             case 6:this.maxShowFileTag = "6个";break;
           }
-          console.log("maxShowFileTagVal - set2", val, this.maxShowFileTag)
+          // console.log("maxShowFileTagVal - set2", val, this.maxShowFileTag)
         }
       }),
       phoneHeightFixCompatibilityOptions: ["svh","vh","js"],
+      fastFileFilterOptions: ["显示全部","未阅读","已阅读"],
+      fastFileFilter: "显示全部",
 
       // 显示模式
       showMode: "pc",
 
       files:[],
+      filesFilterResult: [],
       groupFiles:[],
       filterFileText: "",
       // 过滤显示快速跳转已读列表
       fileQuickJump: computed({
         get: () => {
           let tmp = [];
+          let fileIndex = -1;
           for (const fileItem of this.files) {
+            if(fileItem.isFile){
+              fileIndex++;
+            }
             if(fileItem.isSeen){
+              if(fileItem.isFile){
+                fileItem.openIndex=fileIndex;
+              }
               tmp.push(fileItem)
             }
           }
@@ -317,12 +350,13 @@ export default {
           return tmp;
         },
         set: val => {
-
         }
       }),
 
       nowPath: "",
       isLoad: false,
+      isLoadTag: false,
+      loadEmptyText: "目录为空",
       viewImage: false,
       filterFiles: [],
 
@@ -357,50 +391,64 @@ export default {
 
       // 特殊Tag列表
       tagList: {},
+      tagListOut: [],
 
       //libraryHeight: 0,
+      isPathView: false,
     }
   },
   //方法
   methods: {
     listPath: async function (path, faFile, faFileIndex) {
-      this.files = []
+      this.files = [];
+      this.filesFilterResult=[];
       this.isLoad = true;
+      this.analyzePath();
       this.nowPath = path;
-      // console.log("切换路径", path)
       let that = this
+      that.loadEmptyText = "数据加载中...";
+      console.log("传入参数:\n切换路径", path, "\n父级文件：", faFile, "\n父级文件Index", faFileIndex,
+          "\n<><><>\n父级路径：", that.faPath,
+          "\n父级文件", that.faFile,
+          "\n父级文件Index", that.faFileIndex,
+      "\n<><><>")
 
       that.listTag();
 
       API.post("/api/library/",{"path":path}).then(async function (res){
         let data = API.isSucess(res);
         if(data){
-          that.files = data;
-          that.analyzePath();
-          that.listFavorites();
-
-          if(faFile){
-            //that.faPath = path;
-            that.faFile = faFile;
-            that.faFileIndex = faFileIndex;
-          }else{
-            that.faPath = "";
-            that.faFile = [];
-            that.faFileIndex = 0;
-          }
-          // 允许随便切换路径后，不再只能是父子关系了
-          await that.getParentPath(path);
-
-          //判定是否在图片预览状态下切换目录
-          if(that.viewImage===true){
-            //that.openImage(that.fileIndex)
-            that.openImage(0)
-            console.log("更新当前图片预览")
-            that.viewImage=false;
-            that.$nextTick(() => {
-              that.viewImage=true;
-            });
-          }
+          that.processFileResult(data)
+          console.log("响应参数:\n切换路径", path, "\n父级文件：", faFile, "\n父级文件Index", faFileIndex,
+              "\n<><><>\n响应 - 父级路径：", data.path,
+              "\n响应 - 父级文件", data.parent,
+              "\n响应 - 父级文件Index", data.index,
+              "\n<><><>\n父级路径：", that.faPath,
+              "\n父级文件", that.faFile,
+              "\n父级文件Index", that.faFileIndex,
+              "\n<><><>")
+          /*that.$nextTick(() => {
+            that.processFileResult(data)
+            console.log("响应参数:\n切换路径", path, "\n父级文件：", faFile, "\n父级文件Index", faFileIndex,
+                "\n<><><>\n响应 - 父级路径：", data.path,
+                "\n响应 - 父级文件", data.parent,
+                "\n响应 - 父级文件Index", data.index,
+                "\n<><><>\n父级路径：", that.faPath,
+                "\n父级文件", that.faFile,
+                "\n父级文件Index", that.faFileIndex,
+                "\n<><><>")
+          });*/
+          /*setTimeout(()=>{
+            that.processFileResult(data)
+            console.log("响应参数:\n切换路径", path, "\n父级文件：", faFile, "\n父级文件Index", faFileIndex,
+                "\n<><><>\n响应 - 父级路径：", data.path,
+                "\n响应 - 父级文件", data.parent,
+                "\n响应 - 父级文件Index", data.index,
+                "\n<><><>\n父级路径：", that.faPath,
+                "\n父级文件", that.faFile,
+                "\n父级文件Index", that.faFileIndex,
+                "\n<><><>")
+          },2000)*/
         }else {
           API.showDefErrMessage(res)
         }
@@ -408,14 +456,62 @@ export default {
         that.$nextTick(() => {
           that.isLoad = false;
           that.reSizeWindow();
+          that.loadEmptyText = "目录为空";
         });
       })
+    },
+    /**
+     * 处理文件返回数据
+     * @param data
+     */
+    processFileResult: function (data) {
+      let that = this
+      //读取路径视图
+      if(data.view){
+        that.setting = JSON.parse(data.view);
+        console.log("路径视图")
+        that.isPathView = true;
+      }else{
+        that.loadBrowserSetting();
+        console.log("浏览器默认视图")
+        that.isPathView = false;
+      }
+
+      that.files = data.nowPathFileItems;
+      that.analyzePath();
+      that.listFavorites();
+
+      that.faPath = "";
+      that.faFile = [];
+      that.faFileIndex = 0;
+      if(data.path){
+        that.faPath = data.path;
+      }
+      if(data.parent){
+        that.faFile = data.parent;
+      }
+      if(data.index){
+        that.faFileIndex = data.index;
+      }
+      //await that.getParentPath(path);
+
+      //判定是否在图片预览状态下切换目录
+      if(that.viewImage===true){
+        //that.openImage(that.fileIndex)
+        that.openImage(0)
+        // console.log("更新当前图片预览")
+        that.viewImage=false;
+        that.$nextTick(() => {
+          that.viewImage=true;
+        });
+      }
+
     },
     updateFileItem: function (item) {
       API.post("/api/library/update", item).then(res=>API.defaultSuccessFuc)
       this.analyzePath();
     },
-    openImage: function (index) {
+    openImage: function (index, refTarget) {
       this.filterFiles = [];
 
       for (let i = 0; i < this.files.length; i++) {
@@ -427,11 +523,15 @@ export default {
 
       this.viewImage = true;
 
-      console.log("打开图片")
+      console.log("打开图片", index)
       this.fileIndex = index;
       /*this.$nextTick(() => {
         console.log("this.$refs=", this.$refs, this)
       });*/
+      if(refTarget){
+        //console.log("unref", unref, this)
+        this.$refs[refTarget]?.hide?.()
+      }
     },
     delFilePath: function (path) {
       API.post("/api/library/del", {"path": path}).then(res=>{
@@ -446,11 +546,15 @@ export default {
     saveSetting: function () {
       localStorage.setItem("library.setting", JSON.stringify(this.setting));
     },
-    analyzePath: function () {
+    /**
+     * 前端解析目录数据
+     */
+    analyzePath: function (willSaveSetting=false) {
       this.status.num_files=0;
       this.status.num_dir=0;
       let that = this;
       this.tag_init();
+      this.filesFilterResult = [];
       for (const file of this.files) {
         if( file.isFile ){
           this.status.num_files++;
@@ -471,11 +575,24 @@ export default {
             this.tag_add(tag);
           }
         }
+
+        file.show = true;
+        //过滤
+        if(this.fastFileFilter!=="显示全部"){
+          if( (file.isSeen===true) !== (this.fastFileFilter==="已阅读") ){
+            file.show = false;
+          }
+        }
+        // TODO 文件名、标签 过滤
+        if(file.show===true){
+          this.filesFilterResult.push(file);
+        }
       }
       this.tag_get();
 
       // 排序
-      this.files.sort(function (a, b) {
+      /*this.files.sort(function (a, b) {
+        //console.log("this.files.sort", that.setting.fileSortItem)
         switch (that.setting.fileSortItem) {
           case "fileName":{
             if(that.setting.fileSort){
@@ -484,25 +601,59 @@ export default {
               return ArraySortUtil.compare(b.name, a.name)
             }
           }
-          break;
           case "changeTime":{
+            if(that.setting.fileSort){
+              return new Date(b.time).getTime() - new Date(a.time).getTime()
+            }else{
+              return new Date(a.time).getTime() - new Date(b.time).getTime()
+            }
+          }
+          default:
+            console.log("this.files.sort", "default",that.setting.fileSortItem)
+        }
+      })*/
+
+      switch (that.setting.fileSortItem) {
+        case "fileName":{
+          let sortFun = function (a, b) {
+            if(that.setting.fileSort){
+              return ArraySortUtil.compare(a.name, b.name)
+            }else{
+              return ArraySortUtil.compare(b.name, a.name)
+            }
+          }
+          that.files.sort(sortFun)
+          that.filesFilterResult.sort(sortFun)
+        }
+        break;
+        case "changeTime":{
+          let timeSortFun = function (a, b) {
             if(that.setting.fileSort){
               return new Date(a.time).getTime() - new Date(b.time).getTime()
             }else{
               return new Date(b.time).getTime() - new Date(a.time).getTime()
             }
           }
-          break;
+          that.files.sort(timeSortFun)
+          that.filesFilterResult.sort(timeSortFun)
         }
-      })
+        break;
+        default:
+          console.log("this.files.sort", "default",that.setting.fileSortItem)
+      }
 
       // 分组
       this.fileGroup();
 
-      this.saveSetting();
+      if(willSaveSetting===true){
+        this.saveSetting();
+      }
+
+      this.reSizeWindow();
     },
     fileGroup: function () {
       this.groupFiles = [];
+
       // 分组
       if(this.setting.fileGroup === "时间"){
         this.groupFiles = [
@@ -519,7 +670,7 @@ export default {
         let day = Math.floor(now_d.getTime() / 1000 / 3600 / 24);
         let month = now_d.Format("yyyy-MM");
 
-        for (const file of this.files) {
+        for (const file of this.filesFilterResult) {
           let time = new Date(file.time).clearhhmmss();
           let fileDay = time.Format("yyyy-MM-dd");
           let day_file = Math.floor(time.getTime() / 1000 / 3600 / 24);
@@ -549,7 +700,7 @@ export default {
           , {name: "一星", files: []}
           , {name: "未评分", files: []}
         ];
-        for (const file of this.files) {
+        for (const file of this.filesFilterResult) {
           switch (file.rate) {
             case 5: this.groupFiles[0].files.push(file);break;
             case 4: this.groupFiles[1].files.push(file);break;
@@ -566,7 +717,7 @@ export default {
           this.groupFiles.push({name: tag, files: []})
         }
         this.groupFiles.push({name: "未标记", files: []})
-        for (const file of this.files) {
+        for (const file of this.filesFilterResult) {
           if(file.mark === ''){
             this.groupFiles[this.tagOptions.out.length].files.push(file);
             continue;
@@ -580,6 +731,11 @@ export default {
             }
           }
         }
+      }
+
+      // 外部分组排序
+      if(this.setting.fileSort===true){
+        this.groupFiles.reverse();
       }
 
       let buff = [];
@@ -622,7 +778,6 @@ export default {
       }
     },
     reSizeWindow: function () {
-      // console.log("reSizeWindow", this, this.styleVal.controllerHeight, this.styleAuto)
       this.styleVal.controllerHeight = this.$refs["controller"].clientHeight
       this.styleAuto = {
         //"max-height": "calc(100vh - 168px - " + this.styleVal.controllerHeight + "px + 1.5rem)"
@@ -640,9 +795,10 @@ export default {
         default:
           this.styleAuto["max-height"] = `calc(100svh - 168px - ${this.styleVal.controllerHeight}px - ${this.setting.phoneHeightFix}px + 1.5rem)`;
       }
+      console.log("reSizeWindow", this, this.styleVal.controllerHeight, this.styleAuto)
 
       let width = window.innerWidth;
-      let w1= 640;
+      let w1= 720;
       let w2= 450;
       if(width>w1){
         this.direction = ["竖向","从左到右","从右到左"];
@@ -699,11 +855,20 @@ export default {
         case "6个":this.maxShowFileTagVal=6;break;
       }
     },
+    /**
+     * 修改高度单位
+     *
+     * （部分浏览器可能对vh兼容异常，特别是手机浏览器，可能会出现高度失效、状态栏遮挡等）
+     *
+     * *只针对本页面生效
+     */
     changePhoneHeightFix: function () {
       this.reSizeWindow();
       this.saveSetting();
     },
-
+    /**
+     * 获取收藏夹数据
+     */
     listFavorites: function () {
       API.post("/api/library/favorites/list").then(res=>{
         let data = API.isSucess(res);
@@ -719,14 +884,20 @@ export default {
         let data = API.isSucess(res);
         if(data){
           API.TipSuccess("删除成功")
-          //this.listFavorites();
-          this.listPath(this.nowPath);
+          this.listFavorites();
+          // this.listPath(this.nowPath);
         }else {
           API.showDefErrMessage(res)
         }
       })
     },
-
+    /**
+     * 获取父级目录数据
+     *
+     * （即将废除）
+     * @param path 当前路径
+     * @returns {Promise<void>}
+     */
     getParentPath: async function (path) {
       let that = this;
       await API.post("/api/library/parent",{"path":path}).then(res=> {
@@ -742,37 +913,67 @@ export default {
         }
       });
     },
-
+    /**
+     * 获取特殊标签
+     */
     listTag: function () {
       let that = this;
-      that.isLoad = true;
+      that.isLoadTag = true;
       that.tagList = {};
+      that.tagListOut = [];
 
       API.post("/api/tag/").then(function (res){
         let data = API.isSucess(res);
         if(data){
           //that.tagList = data;
-          console.log("tagList", data)
+          // console.log("tagList", data)
           for (const tagItem of data) {
             that.tagList[tagItem.name] = tagItem;
+            that.tagListOut.push(tagItem.name)
           }
         }else {
           API.showDefErrMessage(res)
         }
       }).finally(res=>{
         that.$nextTick(() => {
-          that.isLoad = false;
+          that.isLoadTag = false;
         });
       })
     },
+    /**
+     * 读取浏览器保存的视图设置
+     */
+    loadBrowserSetting: function () {
+      let setting = localStorage.getItem("library.setting");
+      if(setting!=null && typeof setting === "string"){
+        this.setting = JSON.parse(setting);
+      }
+    },
+    /**
+     * 保存视图设置到路径
+     */
+    saveViewToPath: function () {
+      //savePathView
+      let that = this;
+      let nowPath = this.nowPath;
+      let view = JSON.stringify(that.setting);
+      API.post("/api/library/savePathView",{
+        "path": nowPath,
+        "view": view
+      }).then(function (res){
+        let data = API.isSucess(res);
+        if(data){
+          API.TipSuccess("路径专属视图已保存");
+        }else {
+          API.showDefErrMessage(res);
+        }
+      })
+    }
   },
   //启动事件
   mounted() {
     this.listPath();
-    let setting = localStorage.getItem("library.setting");
-    if(setting!=null && typeof setting === "string"){
-      this.setting = JSON.parse(setting);
-    }
+    this.loadBrowserSetting();
 
     //计算空白窗体的高度
     // this.libraryHeight = this.$refs["library"].clientHeight;
@@ -807,8 +1008,13 @@ export default {
     max-height: calc(100svh - 32px - 1rem - var(--el-menu-horizontal-height));
     overflow-y: scroll;
   }
+  /*
   .viewSettingWindow{
     width: 50% !important;
+  }
+  */
+  .el-overlay>.el-splitter>.el-splitter-panel{
+    flex-basis: 50% !important;
   }
 
   .viewDirection{
@@ -819,10 +1025,25 @@ export default {
     }
   }
   .statusBottomBar{
-    .fileItem {
-      .el-link, .el-link__inner {
-        width: 100%;
-        justify-content: space-between;
+    .ParentFileList{
+      .fileItem {
+        .el-link, .el-link__inner {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+    }
+    .seenList{
+      .fileItem {
+        .el-link, .el-link__inner {
+          width: 100%;
+          justify-content: flex-start;
+        }
+        .el-link__inner{
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+        }
       }
     }
   }

@@ -255,7 +255,7 @@ export default {
   },
   //启动事件
   mounted() {
-    console.log("router", this, router)
+    // console.log("router", this, router)
     //this.autoInitPath()
     this.default_active = "1"
     switch (this.$route.path) {
@@ -268,7 +268,7 @@ export default {
       case "/home/config":this.default_active = "3";break;
       case "/home/library":this.default_active = "4";break;
     }
-    console.log(this.default_active, this.$route.path)
+    // console.log(this.default_active, this.$route.path)
 
   },
   //销毁

@@ -56,6 +56,11 @@ public class BaseBackendBashTask {
     @Setter
     private String charseName;
 
+    @Getter
+    private long time;
+    @Getter
+    private long endTime;
+
 //    @Setter
 //    protected EntityManager entityManager;// 数据库状态管理类
 
@@ -103,6 +108,7 @@ public class BaseBackendBashTask {
     public void startRun() {
         isRunning = true;
         isManualStop = false;
+        time = System.currentTimeMillis();
 
         ProcessBuilder pb = new ProcessBuilder(command);
         // 将标准错误流重定向到标准输出流
@@ -134,8 +140,9 @@ public class BaseBackendBashTask {
             process.destroy();
             try {
                 // 等待进程终止，给它一些时间
-                if (!process.waitFor(5, TimeUnit.SECONDS)) { // 最多等待5秒
+                if (!process.waitFor(20, TimeUnit.SECONDS)) { // 最多等待20秒
                     process.destroyForcibly();
+                    isRunning = false;
                 }else{
                     isRunning = false;
                 }
@@ -155,7 +162,14 @@ public class BaseBackendBashTask {
     @ActivateRequestContext
     public void logHook(String logLine){}
     public void exitHook(int exitCode, String errMessage){
+        endTime = System.currentTimeMillis();
         isRunning = false;
+        this.exitCode = exitCode;
+        if(this.errMessage==null || this.errMessage.isEmpty()){
+            this.errMessage = errMessage;
+        }else{
+            this.errMessage += "\r\n" + errMessage;
+        }
     }
     @Transactional
     @ActivateRequestContext
@@ -196,6 +210,10 @@ public class BaseBackendBashTask {
                     }
                     String line;
                     while ((line = out.readLine()) != null) {
+                        line = line.trim();
+                        if(line.isEmpty()){
+                            continue;
+                        }
                         log_lastLine = line;
                         logHook(line);
                     }

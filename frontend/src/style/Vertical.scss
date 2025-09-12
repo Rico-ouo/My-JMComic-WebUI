@@ -13,6 +13,17 @@
     }
   }
 
+  .fileFastMark{
+    .fileItem{
+      .fileItemELink{
+        width: 100%;
+        .el-link__inner{
+
+        }
+      }
+    }
+  }
+
   .VerticalImageBox{
     display: flex;
     flex-direction: column;
@@ -52,7 +63,7 @@
 
   .bottom{
     display: flex;
-    align-items: baseline;
+    align-items: center;
     grid-gap: 1rem;
     gap: 1rem;
   }

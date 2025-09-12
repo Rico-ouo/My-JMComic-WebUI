@@ -80,4 +80,20 @@ public class BackendBashTaskService {
         }
         return ApiResponse.returnFail("找不到对象");
     }
+
+    public ApiResponse stopTask(long id){
+        try {
+            for (BaseBackendBashTask task : backTask) {
+                if(task.getId() == id){
+                    //backTask.remove(task);
+                    task.manualStop();
+                    return ApiResponse.returnOK();
+                }
+            }
+        } catch (Exception e) {
+            //throw new RuntimeException(e);
+            return ApiResponse.returnFail("手动停止失败");
+        }
+        return ApiResponse.returnFail("找不到对象");
+    }
 }

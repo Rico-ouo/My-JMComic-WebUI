@@ -7,6 +7,9 @@
   max-width: calc(100vw - 216px - 1rem);
   margin: 0 0.5rem;
 }
+.Vertical .fileFastMark .fileItem .fileItemELink {
+  width: 100%;
+}
 .Vertical .VerticalImageBox {
   display: flex;
   flex-direction: column;
@@ -37,7 +40,7 @@
 }
 .Vertical .bottom {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   grid-gap: 1rem;
   gap: 1rem;
 }
