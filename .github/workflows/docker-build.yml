@@ -27,10 +27,11 @@ jobs:
 
       - name: Download Linux static binary (app_linux_amd64)
         run: |
-            wget -O Docker/native/project/app \
+            mkdir -p Docker/native/app
+            wget -O Docker/native/app/app \
             https://github.com/Jackxwb/My-JMComic-WebUI/releases/latest/download/app_linux_amd64
-            chmod +x Docker/native/project/app
-            ls -lh Docker/native/project/app
+            chmod +x Docker/native/app/app
+            ls -lh Docker/native/app/app
 
 
       - name: Log in to Aliyun Docker Registry
