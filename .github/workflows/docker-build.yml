@@ -3,6 +3,8 @@ name: Build and Push Docker Image to Aliyun
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
   workflow_dispatch:
