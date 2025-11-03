@@ -54,5 +54,6 @@ RUN pip install jmcomic -i https://mirrors.aliyun.com/pypi/simple/ -U
 RUN pip install flask -i https://mirrors.aliyun.com/pypi/simple/ -U
 
 ## -- python --
+COPY project/app /app/app
 
 CMD ["/app/app"]
