@@ -2,6 +2,7 @@
 FROM python:3.9.22-bookworm
 
 RUN mkdir -p /app
+COPY project/app /app/app
 WORKDIR /app
 
 # 指定用户UID和GID
@@ -54,6 +55,5 @@ RUN pip install jmcomic -i https://mirrors.aliyun.com/pypi/simple/ -U
 RUN pip install flask -i https://mirrors.aliyun.com/pypi/simple/ -U
 
 ## -- python --
-COPY project/app /app/app
 
 CMD ["/app/app"]
