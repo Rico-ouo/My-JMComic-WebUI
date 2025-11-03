@@ -1,59 +1,27 @@
-#FROM python:3.9.22-alpine
+# Dockerfile
 FROM python:3.9.22-bookworm
 
-RUN mkdir -p /app
-COPY project/app /app/app
+# 工作目录
 WORKDIR /app
 
-# 指定用户UID和GID
+# 下载 Linux 二进制（根据目标架构选择版本）
+ARG BINARY_URL="https://github.com/Jackxwb/My-JMComic-WebUI/releases/latest/download/app_linux_amd64"
+RUN wget -O /app/app $BINARY_URL \
+    && chmod +x /app/app
+
+# 安装 Python 依赖
+RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple \
+    jmcomic flask
+
+# 创建用户（可选）
 ARG USER_ID=33
 ARG GROUP_ID=100
 ARG USERNAME=www-data
+RUN addgroup -g $GROUP_ID users \
+    && adduser -u $USER_ID -G users -D -h /home/$USERNAME -s /bin/sh $USERNAME
 
-# 创建或更新组和用户的脚本
-RUN set -xe; \
-    \
-    # 检查并创建组 \
-    if ! getent group ${GROUP_ID} >/dev/null; then \
-        if getent group users >/dev/null; then \
-            # 如果users组存在但GID不匹配，则修改GID \
-            [ $(getent group users | cut -d: -f3) -eq ${GROUP_ID} ] || \
-            groupmod -g ${GROUP_ID} users; \
-        else \
-            # 创建新组 \
-            addgroup -g ${GROUP_ID} users; \
-        fi; \
-    fi; \
-    \
-    # 检查并创建用户 \
-    if ! getent passwd ${USER_ID} >/dev/null; then \
-        if getent passwd ${USERNAME} >/dev/null; then \
-            # 如果用户存在但UID不匹配，则修改UID \
-            [ $(getent passwd ${USERNAME} | cut -d: -f3) -eq ${USER_ID} ] || \
-            usermod -u ${USER_ID} ${USERNAME}; \
-        else \
-            # 创建新用户 \
-            adduser -u ${USER_ID} -G users -D -h /home/${USERNAME} -s /bin/sh ${USERNAME}; \
-        fi; \
-    fi; \
-    \
-    # 确保用户属于正确的组 \
-    if ! id -nG ${USERNAME} | grep -qw users; then \
-        adduser ${USERNAME} users; \
-    fi
+# 切换到非 root 用户（可选）
+USER $USERNAME
 
-# 设置sudo权限（可选）
-RUN echo '${USERNAME} ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-
-## -- python --
-
-# 安装 jmcomic 库，如果无法安装，请自行更换源
-# RUN pip install jmcomic -i https://pypi.org/project -U
-RUN pip install jmcomic -i https://mirrors.aliyun.com/pypi/simple/ -U
-
-# 补充项目依赖
-RUN pip install flask -i https://mirrors.aliyun.com/pypi/simple/ -U
-
-## -- python --
-
+# 容器启动
 CMD ["/app/app"]
