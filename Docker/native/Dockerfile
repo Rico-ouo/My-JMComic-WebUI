@@ -13,15 +13,20 @@ RUN wget -O /app/app $BINARY_URL \
 RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple \
     jmcomic flask
 
-# 创建用户（可选）
+# 创建非 root 用户（安全方式，不会重复报错）
 ARG USER_ID=33
 ARG GROUP_ID=100
 ARG USERNAME=www-data
-RUN addgroup -g $GROUP_ID users \
-    && adduser -u $USER_ID -G users -D -h /home/$USERNAME -s /bin/sh $USERNAME
 
-# 切换到非 root 用户（可选）
-USER $USERNAME
-
-# 容器启动
+RUN set -eux; \
+    # 创建组，如果已经存在则忽略
+    if ! getent group $GROUP_ID >/dev/null 2>&1; then \
+        groupadd -g $GROUP_ID users; \
+    fi; \
+    # 创建用户，如果已经存在则忽略
+    if ! id -u $USER_ID >/dev/null 2>&1; then \
+        useradd -u $USER_ID -g $GROUP_ID -m -s /bin/sh $USERNAME; \
+    fi
+ 
+# 容器启动命令
 CMD ["/app/app"]
